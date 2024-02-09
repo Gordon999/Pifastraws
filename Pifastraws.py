@@ -12,7 +12,7 @@ import numpy as np
 # setup
 framerate  = 100   # fps
 pre_frames = 100   # Minimum Number of PRE Frames
-v_length   = 1000 # in mS
+v_length   = 10000 # in mS
 ram_limit  = 150   # in MB, stops if RAM below this
 width      = 640   # frame width 
 height     = 480   # frame height
