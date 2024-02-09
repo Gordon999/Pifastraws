@@ -13,7 +13,7 @@ import shutil
 #v0.02
 
 # setup
-framerate  = 200   # fps
+framerate  = 100   # fps
 pre_frames = 100   # Minimum Number of PRE Frames
 v_length   = 10000 # in mS
 ram_limit  = 150   # in MB, stops if RAM below this
