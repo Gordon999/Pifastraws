@@ -10,16 +10,15 @@ import cv2
 import numpy as np
 import shutil
 
-#v0.02
+#v0.03
 
 # setup
 framerate  = 100   # fps
 pre_frames = 100   # Minimum Number of PRE Frames
-v_length   = 10000 # in mS
+v_length   = 5000  # in mS
 ram_limit  = 150   # in MB, stops if RAM below this
 width      = 640   # frame width 
 height     = 480   # frame height
-
 
 # specify trigger button
 trigger    = Button(21)
@@ -51,16 +50,14 @@ print("Capturing Pre-Frames...")
 while len(pics) < pre_frames:
     pics = glob.glob('/run/shm/temp*.raw')
 print("Pre-Frames captured...")
-print("Trigger when ready...")
-
-run = 0
+print("Ready for Trigger.....")
 
 # check ram
 st = os.statvfs("/run/shm/")
 freeram = (st.f_bavail * st.f_frsize)/1100000
 
 # main loop
-while run == 0 and freeram > ram_limit:
+while freeram > ram_limit:
    
     # check ram and stop if full
     st = os.statvfs("/run/shm/")
@@ -100,6 +97,7 @@ while run == 0 and freeram > ram_limit:
         mn = int(timestamp[9:11])
         sc = int(timestamp[11:13])
         ms = int(timestamp[14:21])
+        dz = timestamp[0:6]
         fx = 1
         pics = glob.glob('/run/shm/temp*.raw')
         pics.reverse()
@@ -158,16 +156,7 @@ while run == 0 and freeram > ram_limit:
         im = f.reshape((height,width))
         fd.close()
         cv2.imshow(trig + '.raw',im)
-        
-        # wait for a key press
-        print( "Press ESC to exit, Any other key to restart")
-        k = cv2.waitKey(0)
-        if k == 27:    # Esc key to stop
-            print("Exit")
-            os.killpg(s.pid, signal.SIGTERM)
-            cv2.destroyAllWindows()
-            sys.exit()
-        
+       
         # clear ram of temp files
         print("Clearing temp files from RAM...")
         pics = glob.glob('/run/shm/temp*.raw')
@@ -176,10 +165,21 @@ while run == 0 and freeram > ram_limit:
 
         # move RAM Files to SD card
         print("Moving files to SD card (/Pictures)...")
+        if not os.path.exists(pic_dir + dz) :
+            os.system('mkdir ' + pic_dir + dz)
         vpics = glob.glob('/run/shm/*.raw')
         for xx in range(0,len(vpics)):
-             if not os.path.exists(pic_dir + vpics[xx][9:]):
-                 shutil.move(vpics[xx],pic_dir)
+             if not os.path.exists(pic_dir + vpics[xx][9:]) and vpics[xx][0:4] != "temp":
+                 shutil.move(vpics[xx],pic_dir + dz)
+
+        # wait for a key press
+        print( "Press ESC to exit, Any other key to restart")
+        k = cv2.waitKey(0)
+        if k == 27:    # Esc key to stop
+            print("Exit")
+            os.killpg(s.pid, signal.SIGTERM)
+            cv2.destroyAllWindows()
+            sys.exit()
         
         # restart camera with subprocess
         print("Starting Camera...")
