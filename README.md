@@ -8,3 +8,5 @@ Buffered raws and captured raws them renamed to time of capture eg 123456_076578
 
 Debayers trigger image for showing
 
+640x480 upto 200fps or 1920x1080 upto 47fps
+
