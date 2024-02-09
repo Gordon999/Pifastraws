@@ -8,9 +8,12 @@ import sys
 from gpiozero import Button
 import cv2
 import numpy as np
+import shutil
+
+#v0.02
 
 # setup
-framerate  = 100   # fps
+framerate  = 200   # fps
 pre_frames = 100   # Minimum Number of PRE Frames
 v_length   = 10000 # in mS
 ram_limit  = 150   # in MB, stops if RAM below this
@@ -20,6 +23,11 @@ height     = 480   # frame height
 
 # specify trigger button
 trigger    = Button(21)
+
+# setup directories
+Home_Files  = []
+Home_Files.append(os.getlogin())
+pic_dir = "/home/" + Home_Files[0]+ "/Pictures/"
 
 # clear ram
 print("Clearing RAM...")
@@ -59,7 +67,8 @@ while run == 0 and freeram > ram_limit:
     freeram = (st.f_bavail * st.f_frsize)/1100000
     if freeram < ram_limit:
         run = 1
-
+        
+    # read temp files
     pics = glob.glob('/run/shm/temp*.raw')
     # DELETE OLD FRAMES
     for tt in range(pre_frames,len(pics)-1):
@@ -70,7 +79,7 @@ while run == 0 and freeram > ram_limit:
         now = datetime.datetime.now()
         timestamp = now.strftime("%y%m%d_%H%M%S_%f")
         w = len(pics)
-        print("Triggered...")
+        print("Triggered...", timestamp)
        
         # capture for v_length
         start = time.monotonic()
@@ -151,14 +160,40 @@ while run == 0 and freeram > ram_limit:
         cv2.imshow(trig + '.raw',im)
         
         # wait for a key press
-        cv2.waitKey()
+        print( "Press ESC to exit, Any other key to restart")
+        k = cv2.waitKey(0)
+        if k == 27:    # Esc key to stop
+            print("Exit")
+            os.killpg(s.pid, signal.SIGTERM)
+            cv2.destroyAllWindows()
+            sys.exit()
         
         # clear ram of temp files
+        print("Clearing temp files from RAM...")
         pics = glob.glob('/run/shm/temp*.raw')
         for tt in range(0,len(pics)):
             os.remove(pics[tt])
-        # stop
-        run = 1
+
+        # move RAM Files to SD card
+        vpics = glob.glob('/run/shm/*.raw')
+        for xx in range(0,len(vpics)):
+             if not os.path.exists(pic_dir + vpics[xx][9:]):
+                 shutil.move(vpics[xx],pic_dir)
+        
+        # restart camera with subprocess
+        print("Starting Camera...")
+        command = "rpicam-raw -n -t 0 --segment 1 --framerate " + str(framerate) + " -o /run/shm/temp_%06d.raw --width " + str(width) + " --height " + str(height)
+        s = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)
+        poll = s.poll()
+        while poll != None:
+            print("waiting...")
+            poll = s.poll()
+        print("Capturing Pre-Frames...")
+        while len(pics) < pre_frames:
+            pics = glob.glob('/run/shm/temp*.raw')
+        print("Pre-Frames captured...")
+        print("Trigger when ready...")
+            
 # stop camera subprocess if running
 poll = s.poll()
 if poll == None:
