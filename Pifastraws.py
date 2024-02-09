@@ -175,6 +175,7 @@ while run == 0 and freeram > ram_limit:
             os.remove(pics[tt])
 
         # move RAM Files to SD card
+        print("Moving files to SD card (/Pictures)...")
         vpics = glob.glob('/run/shm/*.raw')
         for xx in range(0,len(vpics)):
              if not os.path.exists(pic_dir + vpics[xx][9:]):
