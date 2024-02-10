@@ -14,5 +14,5 @@ Debayers trigger image for showing
 
 To EXIT press ESC when image appears, other key to capture again
 
-you need to install opencv  sudo apt install python3-opencv
+you need to install opencv with sudo apt install python3-opencv
 
