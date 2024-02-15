@@ -11,6 +11,7 @@ Buffered raws and captured raws then renamed to time of capture eg 123456_076578
 Debayers trigger image for showing
 
 v2 camera: 640x480 upto 200fps or 1920x1080 upto 47fps
+
 v3 camera: 1536x864 upto 120fps
 
 To EXIT press ESC when image appears, other key to capture again
